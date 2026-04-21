@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>语音识别 DeepSeek 对话</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <button id="settingsToggle" class="settings-toggle" type="button" aria-expanded="false" aria-controls="settingsPanel">
+    API
+  </button>
+
+  <aside id="settingsPanel" class="settings-panel hidden" aria-hidden="true">
+    <h2>连接设置</h2>
+    <label for="apiKeyInput">DeepSeek API Key</label>
+    <input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off" />
+
+    <div class="settings-switch">
+      <input id="showApiSwitch" type="checkbox" />
+      <label for="showApiSwitch">显示 API Key</label>
+    </div>
+
+    <div class="settings-switch">
+      <input id="rememberSwitch" type="checkbox" checked />
+      <label for="rememberSwitch">记住 API Key（localStorage）</label>
+    </div>
+
+    <label for="apiBaseInput">接口地址</label>
+    <input id="apiBaseInput" type="text" value="https://api.deepseek.com/chat/completions" />
+
+    <label for="modelInput">模型</label>
+    <input id="modelInput" type="text" value="deepseek-chat" />
+
+    <p class="settings-tip">仅保存在当前浏览器本地，不会上传到其他服务器。</p>
+  </aside>
+
+  <main class="container">
+    <header class="topbar">
+      <h1>Deepseek语音助手</h1>
+      <p>点击“开始语音”即可转文字，再发送给 AI 对话。</p>
+    </header>
+
+    <section id="chatList" class="chat-list" aria-live="polite"></section>
+
+    <section class="composer">
+      <label for="userInput">输入内容</label>
+      <textarea id="userInput" placeholder="输入文字或用语音识别..." spellcheck="false"></textarea>
+      <div class="actions">
+        <button id="voiceBtn" type="button">开始语音</button>
+        <button id="sendBtn" type="button">发送</button>
+      </div>
+      <p id="statusText" class="loading hidden"></p>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+
+</html>
