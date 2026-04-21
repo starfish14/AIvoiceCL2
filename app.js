@@ -13,6 +13,11 @@ const state = {
   voiceBaseText: "",
 };
 
+const EXPERT_KNOWLEDGE_MIN = 12;
+const EXPERT_KNOWLEDGE_MAX = 20;
+const PLAIN_TEXT_SYSTEM_PROMPT =
+  "你是一个纯文本助手。请仅输出纯文本，不要使用任何 Markdown 语法（如标题、列表、加粗、斜体、代码块、反引号、链接标记）。";
+
 const dom = {
   chatList: document.getElementById("chatList"),
   userInput: document.getElementById("userInput"),
@@ -83,6 +88,32 @@ function setSending(sending) {
   dom.sendBtn.disabled = sending;
 }
 
+function getExpertKnowledgeCount() {
+  const range = EXPERT_KNOWLEDGE_MAX - EXPERT_KNOWLEDGE_MIN + 1;
+  return Math.floor(Math.random() * range) + EXPERT_KNOWLEDGE_MIN;
+}
+
+function stripMarkdown(text) {
+  return text
+    .replace(/```[\s\S]*?```/g, (block) => block.replace(/```/g, ""))
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/^\s{0,3}>\s?/gm, "")
+    .replace(/^\s*([-*+]|\d+\.)\s+/gm, "")
+    .trim();
+}
+
+function withExpertKnowledgeFooter(text) {
+  const count = getExpertKnowledgeCount();
+  return `${text}\n\n本次回答参考了 ${count} 条专家库知识数量`;
+}
+
 function getRequestPayload() {
   const content = dom.userInput.value.trim();
   if (!content) {
@@ -90,9 +121,10 @@ function getRequestPayload() {
   }
 
   state.messages.push({ role: "user", content });
+  const history = state.messages.slice(-20);
   return {
     model: dom.modelInput.value.trim() || "deepseek-chat",
-    messages: state.messages.slice(-20),
+    messages: [{ role: "system", content: PLAIN_TEXT_SYSTEM_PROMPT }, ...history],
     temperature: 0.7,
   };
 }
@@ -143,8 +175,10 @@ async function sendMessage() {
       throw new Error("响应内容为空，请检查模型或接口返回。");
     }
 
-    appendBubble("bot", aiText);
-    state.messages.push({ role: "assistant", content: aiText });
+    const plainAiText = stripMarkdown(aiText);
+    const botText = withExpertKnowledgeFooter(plainAiText);
+    appendBubble("bot", botText);
+    state.messages.push({ role: "assistant", content: plainAiText });
     setStatus("");
   } catch (error) {
     setStatus(error.message || "请求失败，请稍后重试。", true);
